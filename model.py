@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 import statistics
+from itertools import zip_longest
 
 
 def euclidean_distance(point_a: np.array, point_b: np.array):
@@ -12,15 +14,18 @@ def euclidean_distance(point_a: np.array, point_b: np.array):
     return np.sqrt(np.sum((point_a - point_b) ** 2, axis=0))
 
 
-def hamming_distance(string_a, string_b):
+def hamming_distance(str_array_a, str_array_b):
     """
     Function to compute hamming distance between two arrays of strings
-    :param string_a: Array one representing the categorical values of an observation in a dataset
-    :param string_b: Array two representing the categorical values of an observation in a dataset
+    :param str_array_a: Array one representing the categorical values of an observation in a dataset
+    :param str_array_b: Array two representing the categorical values of an observation in a dataset
     :return: Distance between the given arrays
     """
-    # TODO: Compute Hamming distance between each pair of elements in the given arrays
-    pass
+
+    def find_hamming_dist(string_a, string_b):
+        return sum(a != b for a, b in zip_longest(string_a, string_b))
+
+    return np.sum([find_hamming_dist(string_a, string_b) for string_a, string_b in zip(str_array_a, str_array_b)])
 
 
 class KNN:
@@ -40,6 +45,7 @@ class KNN:
         self.total_length = None
         self.numerical_cols = None
         self.ordinal_cols = None
+        self.ordinal_codes = {}
         self.categorical_cols = None
         self.numerical_x_train = None
         self.categorical_x_train = None
@@ -68,7 +74,10 @@ class KNN:
         self.ordinal_cols = ordinal_cols
         self.categorical_cols = categorical_cols
 
-        # TODO: Use pandas to convert the values in ordinal_cols to numerical representations
+        for each_col in self.ordinal_cols:
+            temp_col = pd.Categorical(self.x[each_col])
+            self.ordinal_codes[each_col] = temp_col.categories
+            self.x[each_col] = temp_col.codes
 
         self.numerical_x_train = x[numerical_cols + ordinal_cols].to_numpy()
         self.categorical_x_train = x[categorical_cols].to_numpy()
@@ -79,6 +88,10 @@ class KNN:
         :param x_test: Dataframe of independent variables of test data
         :return: Array of predicted labels
         """
+        for each_col in self.ordinal_cols:
+            temp = pd.Categorical(x_test[each_col], categories=self.ordinal_codes[each_col])
+            x_test[each_col] = temp.codes
+
         self.numerical_x_test = x_test[self.numerical_cols + self.ordinal_cols].to_numpy()
         self.categorical_x_test = x_test[self.categorical_cols].to_numpy()
 
@@ -99,7 +112,7 @@ class KNN:
         categorical_dist = np.array([hamming_distance(x_test_categorical, each_train_sample)
                                      for each_train_sample in self.categorical_x_train])
 
-        total_dist = np.sum(euclidean_dist, categorical_dist)
+        total_dist = np.sum([euclidean_dist, categorical_dist], axis=0)
         top_k_idx = np.argsort(total_dist)[0:self.k]
         labels = np.take(self.y, top_k_idx)
 
