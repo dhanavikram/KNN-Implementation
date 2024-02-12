@@ -43,62 +43,56 @@ class KNN:
         self.x = None
         self.y = None
         self.total_length = None
+        self.target_col = None
         self.numerical_cols = None
-        self.ordinal_cols = None
-        self.ordinal_codes = {}
         self.categorical_cols = None
         self.numerical_x_train = None
         self.categorical_x_train = None
+        self.x_test = None
+        self.y_actual = None
+        self.y_predicted = None
         self.numerical_x_test = None
         self.categorical_x_test = None
 
-    def fit(self, x, y, numerical_cols, ordinal_cols, categorical_cols):
+    def fit(self, df: pd.DataFrame, target_col: str, numerical_cols: list, categorical_cols: list):
         """
         Fits the instance on the training dataset. Segregates the arrays into numerical and
         categorical_columns
-        :param x: Dataframe containing all the independent variables
-        :param y: Series containing the class labels
+        :param df: Dataframe containing KNN training samples.
+        :param target_col: Name of the column containing the target samples.
         :param numerical_cols: List of numerical columns
-        :param ordinal_cols: List of ordinal columns
         :param categorical_cols: List of categorical columns
         :return: None
         """
 
-        if x.shape[0] != y.shape[0]:
-            raise ValueError("Input features and Labels are of not same length")
-
-        self.x = x
-        self.y = y
+        self.x = df.drop([target_col], axis=1)
+        self.y = df[target_col]
         self.total_length = self.x.shape[0]
+        self.target_col = target_col
         self.numerical_cols = numerical_cols
-        self.ordinal_cols = ordinal_cols
         self.categorical_cols = categorical_cols
 
-        for each_col in self.ordinal_cols:
-            temp_col = pd.Categorical(self.x[each_col])
-            self.ordinal_codes[each_col] = temp_col.categories
-            self.x[each_col] = temp_col.codes
+        self.numerical_x_train = self.x[self.numerical_cols].to_numpy()
+        self.categorical_x_train = self.x[categorical_cols].to_numpy()
 
-        self.numerical_x_train = x[numerical_cols + ordinal_cols].to_numpy()
-        self.categorical_x_train = x[categorical_cols].to_numpy()
-
-    def predict(self, x_test):
+    def predict(self, test_df: pd.DataFrame) -> np.array:
         """
         Predicts the labels for given test samples
-        :param x_test: Dataframe of independent variables of test data
+        :param test_df: Dataframe of test data
         :return: Array of predicted labels
         """
-        for each_col in self.ordinal_cols:
-            temp = pd.Categorical(x_test[each_col], categories=self.ordinal_codes[each_col])
-            x_test[each_col] = temp.codes
 
-        self.numerical_x_test = x_test[self.numerical_cols + self.ordinal_cols].to_numpy()
-        self.categorical_x_test = x_test[self.categorical_cols].to_numpy()
+        self.x_test = test_df.drop([self.target_col], axis=1)
+        self.y_actual = test_df[self.target_col].to_numpy()
+        self.numerical_x_test = self.x_test[self.numerical_cols].to_numpy()
+        self.categorical_x_test = self.x_test[self.categorical_cols].to_numpy()
 
         predicted_y = [self._predict_for_each_instance(
-            self.numerical_x_test[i], self.categorical_x_test[i]) for i in range(self.total_length)]
+            self.numerical_x_test[i], self.categorical_x_test[i]) for i in range(test_df.shape[0])]
 
-        return np.array(predicted_y)
+        self.y_predicted = np.array(predicted_y)
+
+        return self.y_predicted
 
     def _predict_for_each_instance(self, x_test_numerical, x_test_categorical):
         """
@@ -117,3 +111,10 @@ class KNN:
         labels = np.take(self.y, top_k_idx)
 
         return statistics.mode(labels)
+
+    def get_accuracy(self):
+        numerator = sum(self.y_predicted == self.y_actual)
+        denominator = len(self.y_predicted)
+        accuracy = numerator/denominator
+        print(f"Accuracy: {accuracy}")
+        return accuracy
