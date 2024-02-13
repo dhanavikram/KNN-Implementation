@@ -118,3 +118,41 @@ class KNN:
         accuracy = numerator/denominator
         print(f"Accuracy: {accuracy}")
         return accuracy
+
+    def get_balanced_accuracy(self):
+        unique_classes, class_counts = np.unique(self.y_actual, return_counts=True)
+        class_accuracies = []
+
+        for each_class in unique_classes:
+            true_positive = np.sum((self.y_predicted == each_class) & (self.y_actual == each_class))
+            total_samples_class = class_counts[each_class]
+
+            class_accuracy = true_positive / total_samples_class if total_samples_class != 0 else 0
+            class_accuracies.append(class_accuracy)
+
+        balanced_accuracy = np.mean(class_accuracies)
+        print(f"Balanced Accuracy: {balanced_accuracy}")
+        return balanced_accuracy
+
+    def get_f1_score(self, return_precision_and_recall=False):
+
+        true_positive = 0
+        false_positive = 0
+        true_negative = 0
+        false_negative = 0
+
+        for actual, predicted in zip(self.y_actual, self.y_predicted):
+            true_positive += actual and predicted
+            false_positive += not actual and predicted
+            true_negative += not actual and not predicted
+            false_negative += actual and not predicted
+
+        precision = true_positive / (true_positive + false_positive) if (true_positive + false_positive) != 0 else 0
+        recall = true_positive / (true_positive + false_negative) if (true_positive + false_negative) != 0 else 0
+
+        f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) != 0 else 0
+
+        if return_precision_and_recall:
+            return f1_score, precision, recall
+        else:
+            return f1_score
