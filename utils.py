@@ -2,7 +2,18 @@ import numpy as np
 import pandas as pd
 
 
-def train_test_val_split(df, train_size=0.70, val_size=0.15, target_col='Status'):
+def train_test_val_split(df, train_size: int = 0.70, val_size: int = 0.15,
+                         target_col: str = 'Status', concat_train_val: bool = False):
+    """
+    Function used to split the given dataset into training, validation and test datasets in a stratified manner.
+    :param df: Dataset to be split
+    :param train_size: Size of the training dataset
+    :param val_size: Size of the validation dataset
+    :param target_col: Column used to stratify the split
+    :param concat_train_val: If set True,
+    will concatenate train and validation dataframes and return it along with test dataframe
+    :return: Train, Validation and Test Dataframes
+    """
     train_lst = []
     val_lst = []
     test_lst = []
@@ -17,25 +28,40 @@ def train_test_val_split(df, train_size=0.70, val_size=0.15, target_col='Status'
         train, val, test = np.split(group_df, [train_split_idx, val_split_idx])
 
         train_lst.append(train)
-        test_lst.append(test)
         val_lst.append(val)
+        test_lst.append(test)
 
-    final_train = pd.concat(train_lst)
-    final_test = pd.concat(test_lst)
-    final_val = pd.concat(val_lst)
+    final_train = pd.concat(train_lst, ignore_index=True)
+    final_val = pd.concat(val_lst, ignore_index=True)
+    final_test = pd.concat(test_lst, ignore_index=True)
 
-    return final_train, final_test, final_val
+    if concat_train_val:
+        return pd.concat([final_train, final_val], ignore_index=True), final_test
+
+    return final_train, final_val, final_test
 
 
-class Preprocess:
+class Preprocessor:
+    """
+    Class used to preprocess the given training and validation/test dataframes
+    """
 
     def __init__(self):
+        """
+        Constructor method. Instantiates the class and required attributes.
+        """
         self.df = None
         self.test_df = None
         self.ordinal_col_lst = None
         self.ordinal_codes = {}
 
     def convert_ordinal_to_numerical_train(self, df: pd.DataFrame, ordinal_col_lst: list) -> pd.DataFrame:
+        """
+        Method used to convert the ordinal categorical columns to numerical columns in training dataframe.
+        :param df: Train dataframe
+        :param ordinal_col_lst: List of ordinal columns
+        :return: Pre-processed Dataframe
+        """
 
         self.df = df.copy(deep=True)
         self.ordinal_col_lst = ordinal_col_lst
@@ -47,8 +73,12 @@ class Preprocess:
 
         return self.df
 
-    def convert_ordinal_to_numerical_test(self, df):
-
+    def convert_ordinal_to_numerical_test(self, df) -> pd.DataFrame:
+        """
+        Method used to convert the ordinal categorical columns to numerical columns in test or validation dataframe.
+        :param df: Test/Validation Dataframe
+        :return: Pre-processed Dataframe
+        """
         self.test_df = df.copy(deep=True)
 
         for each_col in self.ordinal_col_lst:

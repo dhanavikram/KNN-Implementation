@@ -113,13 +113,20 @@ class KNN:
         return statistics.mode(labels)
 
     def get_accuracy(self):
+        """
+        Method to get the accuracy of the model's prediction
+        :return: Accuracy value ranging from 0 to 1
+        """
         numerator = sum(self.y_predicted == self.y_actual)
         denominator = len(self.y_predicted)
         accuracy = numerator/denominator
-        print(f"Accuracy: {accuracy}")
         return accuracy
 
     def get_balanced_accuracy(self):
+        """
+        Method to get the Balanced accuracy metric. Used when class imbalance exists.
+        :return: Balanced Accuracy value ranging from 0 to 1
+        """
         unique_classes, class_counts = np.unique(self.y_actual, return_counts=True)
         class_accuracies = []
 
@@ -131,11 +138,14 @@ class KNN:
             class_accuracies.append(class_accuracy)
 
         balanced_accuracy = np.mean(class_accuracies)
-        print(f"Balanced Accuracy: {balanced_accuracy}")
         return balanced_accuracy
 
-    def get_f1_score(self, return_precision_and_recall=False):
-
+    def get_f1_score(self, return_precision_and_recall: bool = False):
+        """
+        Method to get F1 score of the model's prediction. Computes precision and recall and returns their harmonic mean.
+        :param return_precision_and_recall: If set true, returns the precision and recall values along with F1 Score.
+        :return: F1 score value ranging from 0 to 1
+        """
         true_positive = 0
         false_positive = 0
         true_negative = 0

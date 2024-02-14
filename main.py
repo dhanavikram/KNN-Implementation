@@ -2,20 +2,20 @@ import numpy as np
 import pandas as pd
 
 from model import KNN
-from utils import train_test_val_split, Preprocess
+from utils import train_test_val_split, Preprocessor
 
 data = pd.read_csv('Breast_Cancer.csv')
 
 # Split data to train, validation and test datasets
 train, val, test = train_test_val_split(data, train_size=0.7, val_size=0.15)
 
-# Preprocess the train dataset - convert ordinal columns to numerical columns
+# Preprocessor the train dataset - convert ordinal columns to numerical columns
 ordinal_cols = ['T Stage ', 'N Stage', '6th Stage', 'differentiate', 'Grade',
                 'A Stage', 'Estrogen Status', 'Progesterone Status', 'Status']
-pre_processor = Preprocess()
+pre_processor = Preprocessor()
 pre_proc_train = pre_processor.convert_ordinal_to_numerical_train(train, ordinal_col_lst=ordinal_cols)
 
-# Preprocess the validation dataset
+# Preprocessor the validation dataset
 pre_proc_val = pre_processor.convert_ordinal_to_numerical_test(val)
 
 # Apply the KNN model on pre-processed dataset.
@@ -30,7 +30,7 @@ accuracies = []
 balanced_accuracies = []
 f1_scores = []
 
-
+# Test on validation dataset to find the best hyperparameter k
 for k in k_values:
     model = KNN(k=k)
     model.fit(df=pre_proc_train, target_col=target_col, numerical_cols=num_cols, categorical_cols=categorical_cols)
