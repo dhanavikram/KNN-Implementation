@@ -2,7 +2,18 @@ import numpy as np
 import pandas as pd
 
 
-def train_test_val_split(df, train_size: int = 0.70, val_size: int = 0.15,
+def shuffle_dataframe(df):
+    """
+    Function to shuffle the given dataframe.
+    :param df: dataframe which is to be shuffled.
+    :return: Shuffled dataframe
+    """
+    indices = np.arange(df.shape[0])
+    shuffled_indices = np.random.RandomState(123).permutation(indices)
+    return df.iloc[shuffled_indices, :].reset_index(drop=True)
+
+
+def train_test_val_split(df, train_size: float = 0.70, val_size: float = 0.15,
                          target_col: str = 'Status', concat_train_val: bool = False):
     """
     Function used to split the given dataset into training, validation and test datasets in a stratified manner.
@@ -31,9 +42,9 @@ def train_test_val_split(df, train_size: int = 0.70, val_size: int = 0.15,
         val_lst.append(val)
         test_lst.append(test)
 
-    final_train = pd.concat(train_lst, ignore_index=True)
-    final_val = pd.concat(val_lst, ignore_index=True)
-    final_test = pd.concat(test_lst, ignore_index=True)
+    final_train = shuffle_dataframe(pd.concat(train_lst, ignore_index=True))
+    final_val = shuffle_dataframe(pd.concat(val_lst, ignore_index=True))
+    final_test = shuffle_dataframe(pd.concat(test_lst, ignore_index=True))
 
     if concat_train_val:
         return pd.concat([final_train, final_val], ignore_index=True), final_test

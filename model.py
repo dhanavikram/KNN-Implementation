@@ -117,7 +117,7 @@ class KNN:
         Method to get the accuracy of the model's prediction
         :return: Accuracy value ranging from 0 to 1
         """
-        numerator = sum(self.y_predicted == self.y_actual)
+        numerator = np.sum(self.y_predicted == self.y_actual)
         denominator = len(self.y_predicted)
         accuracy = numerator/denominator
         return accuracy
